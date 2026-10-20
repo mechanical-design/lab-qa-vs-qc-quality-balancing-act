@@ -425,15 +425,15 @@
         id: 1,
         title: "Mold & Bottle Design",
         focus: "DFM & FEA Tooling Simulation",
-        narrative: "Your machining lab team is specifying the injection mold tooling for a new 500ml ergonomic water bottle. The mold design determines cycle cooling time, parting-line flash, gate shearing, and structural rib stiffness. How will you execute tooling engineering?",
-        pedagogicalTip: "Investing in Moldflow analysis and high-grade P20 steel prevents high thermal shrinkage and uneven bottle wall thickness before cutting steel.",
+        narrative: "Your machining lab team is designing a new 500ml ergonomic water bottle. You are responsible for the mold design. The mold design determines the quality of the water bottle produced, including wall thickness uniformity and structural integrity. How will you execute tooling engineering?",
+        pedagogicalTip: "Investing in advanced analysis and high-grade material for mold to prevents high thermal shrinkage and uneven bottle wall thickness.",
         qaAction: "Moldflow filling/thermal simulation, CAD draft angle optimization, and precision CNC toolpath tolerances.",
         qcAction: "Coordinate Measuring Machine (CMM) inspection of machined core/cavity inserts before clamp assembly.",
         options: [
           {
             id: 'A',
             tag: 'Option A: High QA / Engineering Precision',
-            description: 'Implement full Moldflow FEA simulation, high-precision P20 tool steel mold machining, and uniform wall thickness tolerances.',
+            description: 'Hire consulting engineers for mold design. Implement full detailed FEA simulation, high-precision hardened steel mold machining, and uniform wall thickness tolerances.',
             cost: -50000,
             time: 15,
             defectChange: -5.0,
@@ -457,7 +457,7 @@
           {
             id: 'C',
             tag: 'Option C: Cost/Time-Cutting Shortcut',
-            description: 'Fast-track design using off-the-shelf CAD models with thin-wall areas to cut plastic weight and cycle time.',
+            description: 'Fast-track design using own CAD models for mold design with thin-wall areas to cut plastic weight and cycle time.',
             cost: -5000,
             time: 4,
             defectChange: 4.0,
@@ -472,7 +472,7 @@
         id: 2,
         title: "Incoming Material Inspection",
         focus: "Supplier Qualification vs. Lot Tolerance (LTPD)",
-        narrative: "A 40,000 kg shipment of virgin PET resin pellets has arrived at the receiving dock. Moisture content or erratic Melt Flow Index (MFI) will cause hydrolytic degradation, haze, and brittle bottle preforms. What incoming quality protocol will you enforce?",
+        narrative: "A 40,000 kg shipment of material to be used to produce the water bottles (PET resin pellets) has arrived at the receiving dock. Moisture content above acceptable limits will cause  degradation, and brittle bottle. What incoming quality protocol will you enforce?",
         pedagogicalTip: "Quality cannot be inspected into bad resin. If degraded polymer enters the extruder screw, scrap is guaranteed during blow molding.",
         qaAction: "Auditing resin supplier synthesis reactors, certifying raw chemical supply chains, and preventive dryer maintenance.",
         qcAction: "Testing incoming resin samples for moisture content (Karl Fischer titration) and Melt Flow Index (MFI).",
@@ -480,7 +480,7 @@
           {
             id: 'A',
             tag: 'Option A: QA-Heavy / Supplier Audits',
-            description: 'Strict Supplier Quality Audit + Melt Flow Index (MFI) & moisture content verification on every resin batch.',
+            description: 'Strict Supplier Quality Audit & moisture content verification on every resin batch.',
             cost: -12000,
             time: 8,
             defectChange: -3.5,
@@ -520,25 +520,25 @@
         title: "Injection Molding Manufacturing",
         focus: "Statistical Process Control (SPC) vs. Gatekeeping",
         narrative: "The injection molding machines are ready to produce 200,000 bottle preforms. Maintaining strict barrel temperature zones (260°C - 285°C) and pack/hold pressure is vital to prevent sink marks, short shots, and flash. How do you control the plant floor?",
-        pedagogicalTip: "SPC focuses on maintaining process capability (Cpk >= 1.67) so defect generation is stopped at the source rather than culled at the end.",
-        qaAction: "Installing real-time cavity pressure transducers and thermocouple feedback loops for closed-loop SPC control.",
+        pedagogicalTip: "SPC focuses on maintaining process capability so defect generation is stopped at the source rather than culled at the end.",
+        qaAction: "Installing real-time sensors and thermocouple feedback loops for closed-loop SPC control.",
         qcAction: "Periodic caliper checks of bottle wall thickness and visual check for flash after parts drop into bins.",
         options: [
           {
             id: 'A',
             tag: 'Option A: QA Process Control (SPC)',
-            description: 'Closed-loop SPC sensors monitoring melt temp, injection pressure, and cooling rate in real time with Cpk >= 1.67.',
+            description: 'Closed-loop SPC sensors monitoring melt temp, injection pressure, and cooling rate in real time with automatic adjustments to maintain process stability.',
             cost: -40000,
             time: 12,
             defectChange: -4.0,
             reputationChange: 4,
             coqCategory: 'prevention',
             unitCostImpact: 0.08,
-            details: 'Real-time servo pressure adjustment prevents micro-voids and eliminates human operator variance.'
+            details: 'Real-time servo pressure adjustment prevents defects and eliminates human operator variance.'
           },
           {
             id: 'B',
-            tag: 'Option B: Balanced Operator Checks',
+            tag: 'Option B: Balanced QC operation and Operator Checks',
             description: 'Periodic manual operator measurement every 2 hours and automated part separator.',
             cost: -12000,
             time: 8,
@@ -573,8 +573,8 @@
         options: [
           {
             id: 'A',
-            tag: 'Option A: Rigorous QC Gatekeeper',
-            description: 'Automated vision system for dimensional check + automated pressure decay leak tester on 100% of bottles.',
+            tag: 'Option A: QA tight SOP and advanced QC Gatekeeper',
+            description: 'Design tight SOP for process control and and defects detection. Implementing Automated vision system for dimensional check + automated pressure decay leak tester on 100% of bottles.',
             cost: -18000,
             time: 10,
             defectChange: -3.0,
