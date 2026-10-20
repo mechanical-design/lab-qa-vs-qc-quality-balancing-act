@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plastic Bottle Manufacturing: Quality Balancing Act Simulator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              300: '#7cc7fb',
+              400: '#38a9f8',
+              500: '#0e8ce9',
+              600: '#026fc7',
+              700: '#0358a1',
+              800: '#074b83',
+              900: '#0c3f6e'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    @keyframes flashGreen {
+      0% { background-color: rgba(34, 197, 94, 0.4); }
+      100% { background-color: transparent; }
+    }
+    @keyframes flashRed {
+      0% { background-color: rgba(239, 68, 68, 0.4); }
+      100% { background-color: transparent; }
+    }
+    .metric-flash-green {
+      animation: flashGreen 1.2s ease-out;
+    }
+    .metric-flash-red {
+      animation: flashRed 1.2s ease-out;
+    }
+    .scenario-text {
+      font-size: 1.22rem;
+      line-height: 1.75rem;
+    }
+    .option-title {
+      font-size: 1.15rem;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-200">
+
+  <header class="bg-gradient-to-r from-brand-800 via-brand-700 to-brand-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
+          <i data-lucide="cylinder" class="w-6 h-6 text-brand-200"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            Plastic Bottle Manufacturing
+            <span class="text-xs uppercase font-semibold px-2 py-0.5 rounded-full bg-brand-500/40 border border-brand-300/30 text-brand-100">
+              Simulation Lab
+            </span>
+          </h1>
+          <p class="text-xs sm:text-sm text-brand-100">Machining Lab Interactive Case Study: Quality Assurance vs. Quality Control</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="btn-show-guide" class="text-xs sm:text-sm px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1.5 font-medium">
+          <i data-lucide="book-open" class="w-4 h-4"></i> CoQ Guide
+        </button>
+        <button id="btn-reset" class="text-xs sm:text-sm px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-400 text-white shadow-sm transition flex items-center gap-1.5 font-medium">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset Simulation
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="bg-white border-b border-brand-100 shadow-sm sticky top-[69px] z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        
+        <!-- Budget -->
+        <div id="card-budget" class="p-3 rounded-xl bg-brand-50/60 border border-brand-100 transition-colors duration-300">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="wallet" class="w-3.5 h-3.5 text-brand-600"></i> Budget</span>
+            <span id="budget-delta" class="text-[11px] font-mono"></span>
+          </div>
+          <div class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight" id="metric-budget">$100,000</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Initial: $100k</div>
+        </div>
+
+        <!-- Schedule -->
+        <div id="card-schedule" class="p-3 rounded-xl bg-brand-50/60 border border-brand-100 transition-colors duration-300">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i> Schedule</span>
+            <span id="schedule-delta" class="text-[11px] font-mono"></span>
+          </div>
+          <div class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight" id="metric-schedule">0 <span class="text-xs font-normal text-slate-500">/ 60 d</span></div>
+          <div class="text-[11px] text-slate-500 mt-0.5" id="schedule-status">Target: 60 Days</div>
+        </div>
+
+        <!-- Defect Rate -->
+        <div id="card-defect" class="p-3 rounded-xl bg-brand-50/60 border border-brand-100 transition-colors duration-300">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-600"></i> Defect Rate</span>
+            <span id="defect-delta" class="text-[11px] font-mono"></span>
+          </div>
+          <div class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight" id="metric-defect">10.0%</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Baseline: 10.0%</div>
+        </div>
+
+        <!-- Unit Cost -->
+        <div id="card-unitcost" class="p-3 rounded-xl bg-brand-50/60 border border-brand-100 transition-colors duration-300">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3.5 h-3.5 text-indigo-600"></i> Unit Cost</span>
+            <span id="unitcost-delta" class="text-[11px] font-mono"></span>
+          </div>
+          <div class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight" id="metric-unitcost">$0.35</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Per bottle mfg</div>
+        </div>
+
+        <!-- Reputation -->
+        <div id="card-reputation" class="p-3 rounded-xl bg-brand-50/60 border border-brand-100 transition-colors duration-300">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="award" class="w-3.5 h-3.5 text-blue-600"></i> Brand Score</span>
+            <span id="reputation-delta" class="text-[11px] font-mono"></span>
+          </div>
+          <div class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight" id="metric-reputation">80 <span class="text-xs font-normal text-slate-500">/ 100</span></div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Market Trust</div>
+        </div>
+
+        <!-- Net Profit -->
+        <div id="card-profit" class="p-3 rounded-xl bg-brand-50/60 border border-brand-100 transition-colors duration-300">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-600"></i> Est. Profit</span>
+            <span id="profit-delta" class="text-[11px] font-mono"></span>
+          </div>
+          <div class="text-lg sm:text-xl font-bold text-emerald-700 tracking-tight" id="metric-profit">$0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Net projection</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Stage Progress Indicator -->
+    <div class="mb-6 bg-white p-4 rounded-2xl border border-brand-100 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-brand-600">Production Lifecycle</span>
+          <h2 class="text-lg font-bold text-slate-800" id="stage-indicator-title">Stage 1 of 5: Mold & Bottle Design</h2>
+        </div>
+        <!-- Steps Bar -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+          <div id="step-pill-1" class="step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white flex items-center gap-1.5 border border-brand-600">
+            <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[11px]">1</span> Design
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 flex-shrink-0"></i>
+          <div id="step-pill-2" class="step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-500 flex items-center gap-1.5 border border-slate-200">
+            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px]">2</span> Material
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 flex-shrink-0"></i>
+          <div id="step-pill-3" class="step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-500 flex items-center gap-1.5 border border-slate-200">
+            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px]">3</span> Molding
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 flex-shrink-0"></i>
+          <div id="step-pill-4" class="step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-500 flex items-center gap-1.5 border border-slate-200">
+            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px]">4</span> Testing
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 flex-shrink-0"></i>
+          <div id="step-pill-5" class="step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-500 flex items-center gap-1.5 border border-slate-200">
+            <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[11px]">5</span> Release
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LEFT COLUMN: Scenario & Decisions (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Decision View Container -->
+        <div id="decision-container" class="bg-white rounded-2xl border border-brand-100 p-6 shadow-sm">
+          
+          <!-- Stage Header & Description -->
+          <div class="border-b border-slate-100 pb-5 mb-5">
+            <div class="flex items-center gap-2 mb-2">
+              <span id="stage-badge" class="px-2.5 py-1 text-xs font-bold rounded-md bg-brand-100 text-brand-800 uppercase tracking-wide">
+                Stage 1: Design Phase
+              </span>
+              <span id="stage-focus-badge" class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                DFM & Tooling FEA
+              </span>
+            </div>
+            
+            <h3 id="stage-heading" class="text-2xl font-bold text-slate-900 tracking-tight">
+              Tooling & Mold Design Engineering
+            </h3>
+            
+            <!-- Larger scenario font for enhanced educational focus -->
+            <p id="stage-narrative" class="scenario-text text-slate-700 mt-3 font-normal leading-relaxed">
+              Your machining team is specifying the injection tooling for a 500ml PET water bottle. The choices involve high-precision P20 pre-hardened tool steel with full Moldflow simulation versus fast-machined tooling. Mold precision determines shrinkage rates, parting line flash, and uniform wall thickness.
+            </p>
+          </div>
+
+          <!-- 3 Interactive Options -->
+          <div class="space-y-4" id="options-wrapper">
+            <!-- Option cards injected dynamically via JS -->
+          </div>
+
+          <!-- Bottom Stage Insight Helper -->
+          <div class="mt-6 p-4 rounded-xl bg-blue-50/70 border border-blue-100 flex items-start gap-3 text-sm text-blue-900">
+            <i data-lucide="lightbulb" class="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5"></i>
+            <div>
+              <span class="font-semibold text-brand-800">Quality Engineering Principle:</span>
+              <span id="stage-pedagogical-tip" class="text-slate-700 ml-1">
+                80% of part defects are locked in during the design and tooling stage. Prevention investments here yield 10x savings in post-molding scrap.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Executive Debrief Panel (Hidden until Stage 5 complete) -->
+        <div id="debrief-container" class="hidden bg-white rounded-2xl border-2 border-brand-200 p-6 sm:p-8 shadow-lg">
+          <!-- Dynamically filled on completion -->
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Dynamic QA vs QC & Analytical Charts (5 Cols) -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- Dynamic QA vs QC Stage Context Card -->
+        <div class="bg-white rounded-2xl border border-brand-100 p-5 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i data-lucide="split" class="w-4 h-4 text-brand-600"></i>
+              QA vs. QC Context at Current Stage
+            </h4>
+            <span class="text-[11px] font-semibold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200" id="qa-qc-stage-label">Stage 1</span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- QA Box -->
+            <div class="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200/70">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800 mb-1.5 uppercase tracking-wide">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                QA (Prevention)
+              </div>
+              <p class="text-xs text-slate-700 leading-relaxed" id="stage-qa-action">
+                Moldflow thermal-fill analysis, CAD draft angle checks, and tooling tolerance verification to engineer defects out of the process.
+              </p>
+            </div>
+
+            <!-- QC Box -->
+            <div class="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/70">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-blue-800 mb-1.5 uppercase tracking-wide">
+                <i data-lucide="search" class="w-4 h-4 text-blue-600"></i>
+                QC (Inspection)
+              </div>
+              <p class="text-xs text-slate-700 leading-relaxed" id="stage-qc-action">
+                CMM dimensional measurement of machined core/cavity inserts to detect tool machining deviations prior to clamp assembly.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-3 text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center gap-2">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0"></i>
+            <span><strong>Rule of Thumb:</strong> QA focuses on the <em>process</em>; QC focuses on the <em>product</em>.</span>
+          </div>
+        </div>
+
+        <!-- Chart 1: Cost of Quality (CoQ) -->
+        <div class="bg-white rounded-2xl border border-brand-100 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-600"></i>
+                Cost of Quality (CoQ) Breakdown
+              </h4>
+              <p class="text-[11px] text-slate-500">Cumulative expense split into 4 CoQ categories ($)</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-mono font-bold text-slate-800" id="total-coq-display">$0</span>
+            </div>
+          </div>
+          <div class="relative h-56 w-full">
+            <canvas id="coqChart"></canvas>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3 text-[11px] text-slate-600">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Prevention (QA)
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Appraisal (QC)
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Internal Scrap
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> External Failure
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart 2: Defect Rate Trajectory -->
+        <div class="bg-white rounded-2xl border border-brand-100 p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                <i data-lucide="trending-down" class="w-4 h-4 text-brand-600"></i>
+                Defect Rate Trajectory (%)
+              </h4>
+              <p class="text-[11px] text-slate-500">Target tolerance: &le; 2.5% for high-speed bottle line</p>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded font-mono font-bold" id="defect-status-pill">Normal</span>
+          </div>
+          <div class="relative h-44 w-full">
+            <canvas id="defectChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <div id="guide-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-brand-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="layers" class="w-5 h-5 text-brand-600"></i>
+          Cost of Quality (CoQ) & Engineering Principles
+        </h3>
+        <button id="btn-close-guide" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4 text-sm text-slate-700 leading-relaxed">
+        <div class="p-3.5 bg-blue-50 rounded-xl border border-blue-100">
+          <h4 class="font-bold text-blue-900 text-base mb-1">1. The 1-10-100 Rule of Quality Costs</h4>
+          <p>
+            Spending $1 on prevention (QA mold FEA simulation) prevents $10 of internal inspection/scrap correction in the lab, and avoids $100+ of catastrophic external recall costs once the bottle hits consumer hands.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+            <h5 class="font-bold text-emerald-900 flex items-center gap-1">
+              <i data-lucide="shield" class="w-4 h-4"></i> Prevention Costs (QA)
+            </h5>
+            <p class="text-xs text-slate-600 mt-1">
+              Actions taken upstream to design and build quality into the process (Tooling precision, mold thermal balancing, SPC calibration).
+            </p>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <h5 class="font-bold text-blue-900 flex items-center gap-1">
+              <i data-lucide="search" class="w-4 h-4"></i> Appraisal Costs (QC)
+            </h5>
+            <p class="text-xs text-slate-600 mt-1">
+              Inspecting and measuring downstream items to catch non-conformances (Leak decay testing, vision gauges, burst testing).
+            </p>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-100">
+            <h5 class="font-bold text-amber-900 flex items-center gap-1">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i> Internal Failures
+            </h5>
+            <p class="text-xs text-slate-600 mt-1">
+              Scrap, machine downtime, purging bad resin, and regrinding defective bottles before customer shipment.
+            </p>
+          </div>
+          <div class="p-3 bg-rose-50 rounded-xl border border-rose-100">
+            <h5 class="font-bold text-rose-900 flex items-center gap-1">
+              <i data-lucide="flame" class="w-4 h-4"></i> External Failures
+            </h5>
+            <p class="text-xs text-slate-600 mt-1">
+              Leaking bottles on store shelves, brand PR disaster, warranty claims, retailer fines, and legal recalls.
+            </p>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-amber-50/70 rounded-xl border border-amber-200 text-xs text-amber-900">
+          <strong>Important Lab Insight:</strong> Overspending on extreme prevention without considering cycle time will push the manufacturing cost per unit too high, causing uncompetitive unit economics even if defects are 0%.
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 text-right">
+        <button id="btn-close-guide-2" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl text-sm transition">
+          Return to Simulation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* STAGE SPECIFICATIONS & EDUCATIONAL DATA */
+    const TOTAL_STAGES = 5;
+    const PRODUCTION_VOLUME = 200000; // 200,000 bottles production run
+    const BASE_REVENUE_PER_BOTTLE = 0.95; // base retail price point
+
+    const STAGES_DATA = [
+      {
+        id: 1,
+        title: "Mold & Bottle Design",
+        focus: "DFM & FEA Tooling Simulation",
+        narrative: "Your machining lab team is specifying the injection mold tooling for a new 500ml ergonomic water bottle. The mold design determines cycle cooling time, parting-line flash, gate shearing, and structural rib stiffness. How will you execute tooling engineering?",
+        pedagogicalTip: "Investing in Moldflow analysis and high-grade P20 steel prevents high thermal shrinkage and uneven bottle wall thickness before cutting steel.",
+        qaAction: "Moldflow filling/thermal simulation, CAD draft angle optimization, and precision CNC toolpath tolerances.",
+        qcAction: "Coordinate Measuring Machine (CMM) inspection of machined core/cavity inserts before clamp assembly.",
+        options: [
+          {
+            id: 'A',
+            tag: 'Option A: High QA / Engineering Precision',
+            description: 'Implement full Moldflow FEA simulation, high-precision P20 tool steel mold machining, and uniform wall thickness tolerances.',
+            cost: -50000,
+            time: 15,
+            defectChange: -5.0,
+            reputationChange: 5,
+            coqCategory: 'prevention',
+            unitCostImpact: 0.12,
+            details: 'High upfront tooling capital (-$50k). Eliminates downstream flash and thermal warpage.'
+          },
+          {
+            id: 'B',
+            tag: 'Option B: Balanced QA/QC Engineering',
+            description: 'Standard mold design using standard aluminum tooling and basic wall thickness parameters.',
+            cost: -15000,
+            time: 10,
+            defectChange: -2.0,
+            reputationChange: 0,
+            coqCategory: 'prevention',
+            unitCostImpact: 0.04,
+            details: 'Moderate tooling investment. Acceptable wear life for initial production batches.'
+          },
+          {
+            id: 'C',
+            tag: 'Option C: Cost/Time-Cutting Shortcut',
+            description: 'Fast-track design using off-the-shelf CAD models with thin-wall areas to cut plastic weight and cycle time.',
+            cost: -5000,
+            time: 4,
+            defectChange: 4.0,
+            reputationChange: -5,
+            coqCategory: 'internalFailure',
+            unitCostImpact: -0.02,
+            details: 'Saves $10k+ and 6 days, but introduces weak neck threads and erratic cooling warpage.'
+          }
+        ]
+      },
+      {
+        id: 2,
+        title: "Incoming Material Inspection",
+        focus: "Supplier Qualification vs. Lot Tolerance (LTPD)",
+        narrative: "A 40,000 kg shipment of virgin PET resin pellets has arrived at the receiving dock. Moisture content or erratic Melt Flow Index (MFI) will cause hydrolytic degradation, haze, and brittle bottle preforms. What incoming quality protocol will you enforce?",
+        pedagogicalTip: "Quality cannot be inspected into bad resin. If degraded polymer enters the extruder screw, scrap is guaranteed during blow molding.",
+        qaAction: "Auditing resin supplier synthesis reactors, certifying raw chemical supply chains, and preventive dryer maintenance.",
+        qcAction: "Testing incoming resin samples for moisture content (Karl Fischer titration) and Melt Flow Index (MFI).",
+        options: [
+          {
+            id: 'A',
+            tag: 'Option A: QA-Heavy / Supplier Audits',
+            description: 'Strict Supplier Quality Audit + Melt Flow Index (MFI) & moisture content verification on every resin batch.',
+            cost: -12000,
+            time: 8,
+            defectChange: -3.5,
+            reputationChange: 3,
+            coqCategory: 'prevention',
+            unitCostImpact: 0.05,
+            details: 'Verifies intrinsic viscosity and prevents melt degradation inside the injection barrel.'
+          },
+          {
+            id: 'B',
+            tag: 'Option B: QC-Heavy / Lot Sampling',
+            description: 'Standard AQL (Acceptable Quality Level) sampling and visual pellet inspection upon delivery.',
+            cost: -6000,
+            time: 4,
+            defectChange: -1.0,
+            reputationChange: 0,
+            coqCategory: 'appraisal',
+            unitCostImpact: 0.02,
+            details: 'Catches major contamination but allows minor batch-to-batch moisture variations.'
+          },
+          {
+            id: 'C',
+            tag: 'Option C: Skip Raw Testing (Shortcut)',
+            description: 'Skip raw material testing; rely strictly on supplier Certificate of Analysis (CoA) to save time and money.',
+            cost: -1000,
+            time: 1,
+            defectChange: 5.0,
+            reputationChange: -4,
+            coqCategory: 'internalFailure',
+            unitCostImpact: 0.00,
+            details: 'Saves 7 days, but unverified moisture leads to brittle sidewalls and cloudy plastic.'
+          }
+        ]
+      },
+      {
+        id: 3,
+        title: "Injection Molding Manufacturing",
+        focus: "Statistical Process Control (SPC) vs. Gatekeeping",
+        narrative: "The injection molding machines are ready to produce 200,000 bottle preforms. Maintaining strict barrel temperature zones (260°C - 285°C) and pack/hold pressure is vital to prevent sink marks, short shots, and flash. How do you control the plant floor?",
+        pedagogicalTip: "SPC focuses on maintaining process capability (Cpk >= 1.67) so defect generation is stopped at the source rather than culled at the end.",
+        qaAction: "Installing real-time cavity pressure transducers and thermocouple feedback loops for closed-loop SPC control.",
+        qcAction: "Periodic caliper checks of bottle wall thickness and visual check for flash after parts drop into bins.",
+        options: [
+          {
+            id: 'A',
+            tag: 'Option A: QA Process Control (SPC)',
+            description: 'Closed-loop SPC sensors monitoring melt temp, injection pressure, and cooling rate in real time with Cpk >= 1.67.',
+            cost: -40000,
+            time: 12,
+            defectChange: -4.0,
+            reputationChange: 4,
+            coqCategory: 'prevention',
+            unitCostImpact: 0.08,
+            details: 'Real-time servo pressure adjustment prevents micro-voids and eliminates human operator variance.'
+          },
+          {
+            id: 'B',
+            tag: 'Option B: Balanced Operator Checks',
+            description: 'Periodic manual operator measurement every 2 hours and automated part separator.',
+            cost: -12000,
+            time: 8,
+            defectChange: -1.5,
+            reputationChange: 0,
+            coqCategory: 'appraisal',
+            unitCostImpact: 0.03,
+            details: 'Standard manufacturing practice. Detects drift within two hours of run deviation.'
+          },
+          {
+            id: 'C',
+            tag: 'Option C: Max Speed Run (Shortcut)',
+            description: 'Run machines at maximum cycle speed with wide pressure tolerances to maximize output per hour.',
+            cost: -4000,
+            time: 3,
+            defectChange: 6.0,
+            reputationChange: -6,
+            coqCategory: 'internalFailure',
+            unitCostImpact: -0.03,
+            details: 'Shortens cycle time by 40% but generates high internal scrap and inconsistent neck finishes.'
+          }
+        ]
+      },
+      {
+        id: 4,
+        title: "Testing & Quality Control",
+        focus: "Destructive vs. Non-Destructive In-Line Testing",
+        narrative: "Bottles have finished blow-molding and are being routed for cap assembly and final leak integrity validation. Defective seals will leak water during shipping or under pressure. How will you verify structural and seal integrity?",
+        pedagogicalTip: "100% inspection is costly and cannot improve inherently flawed parts, but it serves as an essential gatekeeper when previous QA steps were compromised.",
+        qaAction: "Calibrating blow mold pinch valves and verifying capping machine torque control settings to prevent thread stripping.",
+        qcAction: "High-speed optical vision checks for neck ovality and automated pressure decay leak testing on finished bottles.",
+        options: [
+          {
+            id: 'A',
+            tag: 'Option A: Rigorous QC Gatekeeper',
+            description: 'Automated vision system for dimensional check + automated pressure decay leak tester on 100% of bottles.',
+            cost: -18000,
+            time: 10,
+            defectChange: -3.0,
+            reputationChange: 5,
+            coqCategory: 'appraisal',
+            unitCostImpact: 0.06,
+            details: 'Catches nearly all defective bottles before boxing. Defective parts are scrapped in-house.'
+          },
+          {
+            id: 'B',
+            tag: 'Option B: Standard Sample QC',
+            description: 'Manual drop testing and burst testing on 5% batch samples in the quality lab.',
+            cost: -8000,
+            time: 5,
+            defectChange: -1.5,
+            reputationChange: 0,
+            coqCategory: 'appraisal',
+            unitCostImpact: 0.02,
+            details: 'Cost-effective statistical batch release. A small percentage of micro-leaks may slip past.'
+          },
+          {
+            id: 'C',
+            tag: 'Option C: Minimal QC Spot-Check',
+            description: 'Visual spot check by warehouse team prior to packaging to ensure on-time delivery.',
+            cost: -2000,
+            time: 2,
+            defectChange: 3.0,
+            reputationChange: -8,
+            coqCategory: 'externalFailure',
+            unitCostImpact: 0.00,
+            details: 'Rushes product straight to cartons; defective bottles escape directly into customer distribution.'
+          }
+        ]
+      },
+      {
+        id: 5,
+        title: "Marketing & Product Release",
+        focus: "Warranty Exposure, External Failures & Brand Equity",
+        narrative: "The 200,000 bottles are ready for distribution into commercial retail channels. Your commercial warranty policy, marketing claims, and distributor terms will directly determine customer expectations and exposure to External Failure Costs.",
+        pedagogicalTip: "External failure costs are the most devastating. If a high-defect product is marketed with high promises, return penalties and brand destruction multiply exponentially.",
+        qaAction: "Design verification audits with retailers, establishing clear customer usage guidelines and seal-protection caps.",
+        qcAction: "Post-market surveillance, analyzing warranty RMA return lots, and retailer warehouse audit reports.",
+        options: [
+          {
+            id: 'A',
+            tag: 'Option A: Premium Warranty Positioning',
+            description: 'Premium positioning ("Zero-Leak Eco Bottle") with a 5-year full replacement warranty.',
+            cost: -10000,
+            time: 5,
+            defectChange: 0.0,
+            reputationChange: 6,
+            revenueMultiplier: 1.45,
+            coqCategory: 'appraisal',
+            unitCostImpact: 0.04,
+            details: 'Enables 1.45x premium pricing ($1.38/bottle), but defect rate > 3.0% triggers severe warranty penalties!'
+          },
+          {
+            id: 'B',
+            tag: 'Option B: Standard Retail Placement',
+            description: 'Standard retail market placement with standard 30-day return policy.',
+            cost: -5000,
+            time: 3,
+            defectChange: 0.0,
+            reputationChange: 1,
+            revenueMultiplier: 1.0,
+            coqCategory: 'prevention',
+            unitCostImpact: 0.02,
+            details: 'Standard market retail price ($0.95/bottle). Normal commercial return rates.'
+          },
+          {
+            id: 'C',
+            tag: 'Option C: Discount Bulk Wholesaler',
+            description: 'Discount bulk sales to budget distributors with strict "No Return" clause.',
+            cost: -2000,
+            time: 1,
+            defectChange: 0.0,
+            reputationChange: -7,
+            revenueMultiplier: 0.70,
+            coqCategory: 'externalFailure',
+            unitCostImpact: -0.01,
+            details: 'Quick revenue at discounted $0.67/bottle. High brand equity loss if bottles crack or leak.'
+          }
+        ]
+      }
+    ];
+
+    // State Tracker
+    const INITIAL_STATE = {
+      currentStage: 1,
+      budget: 100000,
+      schedule: 0,
+      defectRate: 10.0,
+      reputation: 80,
+      unitCost: 0.35,
+      revenueMultiplier: 1.0,
+      decisions: [],
+      coq: {
+        prevention: 0,
+        appraisal: 0,
+        internalFailure: 0,
+        externalFailure: 0
+      },
+      defectHistory: [10.0]
+    };
+
+    let state = JSON.parse(JSON.stringify(INITIAL_STATE));
+  </script>
+
+  <script>
+    let coqChartInstance = null;
+    let defectChartInstance = null;
+
+    function initCharts() {
+      // CoQ Stacked Bar Chart
+      const ctxCoq = document.getElementById('coqChart').getContext('2d');
+      coqChartInstance = new Chart(ctxCoq, {
+        type: 'bar',
+        data: {
+          labels: ['Quality Costs'],
+          datasets: [
+            {
+              label: 'Prevention (QA)',
+              data: [0],
+              backgroundColor: '#10b981', // emerald
+              borderRadius: 6
+            },
+            {
+              label: 'Appraisal (QC)',
+              data: [0],
+              backgroundColor: '#3b82f6', // blue
+              borderRadius: 6
+            },
+            {
+              label: 'Internal Scrap',
+              data: [0],
+              backgroundColor: '#f59e0b', // amber
+              borderRadius: 6
+            },
+            {
+              label: 'External Failure',
+              data: [0],
+              backgroundColor: '#ef4444', // rose
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: $${context.raw.toLocaleString()}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false }
+            },
+            y: {
+              stacked: true,
+              ticks: {
+                callback: function(val) { return '$' + (val / 1000) + 'k'; }
+              },
+              grid: { color: '#f1f5f9' }
+            }
+          }
+        }
+      });
+
+      // Defect Trajectory Line Graph
+      const ctxDefect = document.getElementById('defectChart').getContext('2d');
+      defectChartInstance = new Chart(ctxDefect, {
+        type: 'line',
+        data: {
+          labels: ['Start', 'S1', 'S2', 'S3', 'S4', 'S5'],
+          datasets: [
+            {
+              label: 'Defect Rate (%)',
+              data: [10.0],
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.1)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#0284c7',
+              pointRadius: 4,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'Quality Threshold (2.5%)',
+              data: [2.5, 2.5, 2.5, 2.5, 2.5, 2.5],
+              borderColor: '#dc2626',
+              borderWidth: 1.5,
+              borderDash: [5, 4],
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: 20,
+              ticks: {
+                callback: function(v) { return v + '%'; }
+              },
+              grid: { color: '#f1f5f9' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function updateCharts() {
+      if (!coqChartInstance || !defectChartInstance) return;
+
+      // Update CoQ
+      coqChartInstance.data.datasets[0].data = [state.coq.prevention];
+      coqChartInstance.data.datasets[1].data = [state.coq.appraisal];
+      coqChartInstance.data.datasets[2].data = [state.coq.internalFailure];
+      coqChartInstance.data.datasets[3].data = [state.coq.externalFailure];
+      coqChartInstance.update();
+
+      const totalCoQ = state.coq.prevention + state.coq.appraisal + state.coq.internalFailure + state.coq.externalFailure;
+      document.getElementById('total-coq-display').textContent = '$' + Math.round(totalCoQ).toLocaleString();
+
+      // Update Defect Trajectory
+      defectChartInstance.data.datasets[0].data = state.defectHistory;
+      defectChartInstance.update();
+
+      // Pill indicator
+      const pill = document.getElementById('defect-status-pill');
+      if (state.defectRate <= 2.5) {
+        pill.textContent = 'Excellent (<= 2.5%)';
+        pill.className = 'text-xs px-2 py-0.5 rounded font-mono font-bold bg-emerald-100 text-emerald-800';
+      } else if (state.defectRate <= 6.0) {
+        pill.textContent = 'Acceptable';
+        pill.className = 'text-xs px-2 py-0.5 rounded font-mono font-bold bg-blue-100 text-blue-800';
+      } else {
+        pill.textContent = 'High Defect Risk';
+        pill.className = 'text-xs px-2 py-0.5 rounded font-mono font-bold bg-rose-100 text-rose-800';
+      }
+    }
+  </script>
+
+  <script>
+    /* Continuous Financial Calculation Model */
+    function calculateFinancials() {
+      // Base gross revenue = Volume * price point * stage 5 multiplier
+      const revenuePerUnit = BASE_REVENUE_PER_BOTTLE * state.revenueMultiplier;
+      const potentialGrossRevenue = PRODUCTION_VOLUME * revenuePerUnit;
+
+      // Defect calculation
+      const actualDefectRateFraction = Math.max(0.005, state.defectRate / 100);
+      const defectiveUnits = PRODUCTION_VOLUME * actualDefectRateFraction;
+      const acceptableGoodUnits = PRODUCTION_VOLUME - defectiveUnits;
+
+      // Actual good unit sales
+      let realizedRevenue = acceptableGoodUnits * revenuePerUnit;
+
+      // Internal Scrap cost ($0.18 material and energy to scrap a bottle in-house)
+      const internalScrapCost = defectiveUnits * 0.18;
+
+      // External failure penalty if defect leaked to customers
+      let externalFailureCost = 0;
+      if (state.defectRate > 2.5) {
+        const excessDefectPercent = (state.defectRate - 2.5);
+        // Warranty return penalty and retailer fines
+        externalFailureCost = (excessDefectPercent * 3200) + (excessDefectPercent * excessDefectPercent * 250);
+        
+        // Premium Option A penalty at Stage 5 if defect > 3%
+        if (state.revenueMultiplier > 1.2 && state.defectRate > 3.0) {
+          externalFailureCost += 28000; // severe recall & PR mitigation penalty
+        }
+      }
+
+      // Manufacturing base cost = good units * unitCost
+      const baseMfgCost = PRODUCTION_VOLUME * state.unitCost;
+
+      // Net profit = Realized Revenue - BaseMfgCost - Direct Upfront Expenses - Internal Scrap - External Failure
+      const directSpentBudget = 100000 - state.budget;
+      const netProfit = realizedRevenue - baseMfgCost - directSpentBudget - internalScrapCost - externalFailureCost;
+
+      return {
+        grossRevenue: realizedRevenue,
+        baseMfgCost,
+        directSpentBudget,
+        internalScrapCost,
+        externalFailureCost,
+        netProfit: Math.round(netProfit)
+      };
+    }
+  </script>
+
+  <script>
+    function triggerCardFlash(cardId, isPositive) {
+      const el = document.getElementById(cardId);
+      if (!el) return;
+      el.classList.remove('metric-flash-green', 'metric-flash-red');
+      void el.offsetWidth; // re-flow
+      el.classList.add(isPositive ? 'metric-flash-green' : 'metric-flash-red');
+    }
+
+    function renderStageUI() {
+      const stageIdx = state.currentStage - 1;
+      
+      // If completed all 5 stages
+      if (state.currentStage > TOTAL_STAGES) {
+        renderDebrief();
+        return;
+      }
+
+      const stage = STAGES_DATA[stageIdx];
+
+      // Update Top Stage Indicator
+      document.getElementById('stage-indicator-title').textContent = `Stage ${state.currentStage} of 5: ${stage.title}`;
+      document.getElementById('stage-badge').textContent = `Stage ${state.currentStage}: ${stage.title}`;
+      document.getElementById('stage-focus-badge').textContent = stage.focus;
+      document.getElementById('stage-heading').textContent = stage.title;
+      document.getElementById('stage-narrative').textContent = stage.narrative;
+      document.getElementById('stage-pedagogical-tip').textContent = stage.pedagogicalTip;
+
+      // Update Steps Pills
+      for (let i = 1; i <= TOTAL_STAGES; i++) {
+        const pill = document.getElementById(`step-pill-${i}`);
+        if (!pill) continue;
+        if (i === state.currentStage) {
+          pill.className = 'step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white flex items-center gap-1.5 border border-brand-600 shadow-sm';
+        } else if (i < state.currentStage) {
+          pill.className = 'step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 flex items-center gap-1.5 border border-emerald-200';
+          pill.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Stage ${i}`;
+        } else {
+          pill.className = 'step-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-400 flex items-center gap-1.5 border border-slate-200';
+        }
+      }
+
+      // Update QA vs QC Sidebar Context
+      document.getElementById('qa-qc-stage-label').textContent = `Stage ${state.currentStage}`;
+      document.getElementById('stage-qa-action').textContent = stage.qaAction;
+      document.getElementById('stage-qc-action').textContent = stage.qcAction;
+
+      // Render Options
+      const wrapper = document.getElementById('options-wrapper');
+      wrapper.innerHTML = '';
+
+      stage.options.forEach((opt) => {
+        const costStr = `-$${Math.abs(opt.cost).toLocaleString()}`;
+        const timeStr = `+${opt.time} Days`;
+        const defectStr = opt.defectChange < 0 ? `${opt.defectChange}%` : (opt.defectChange > 0 ? `+${opt.defectChange}%` : `0%`);
+        const repStr = opt.reputationChange >= 0 ? `+${opt.reputationChange}` : `${opt.reputationChange}`;
+
+        const card = document.createElement('div');
+        card.className = "group border-2 border-slate-200 hover:border-brand-500 rounded-2xl p-5 bg-white hover:bg-brand-50/20 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between";
+        card.setAttribute('tabindex', '0');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <span class="font-bold text-slate-900 option-title group-hover:text-brand-700 transition">
+                ${opt.tag}
+              </span>
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                ${opt.id === 'A' ? 'Proactive QA' : (opt.id === 'B' ? 'Balanced' : 'Shortcut')}
+              </span>
+            </div>
+            
+            <p class="text-base text-slate-700 mb-4 leading-relaxed font-normal">
+              ${opt.description}
+            </p>
+
+            <div class="text-xs text-slate-500 italic mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              ${opt.details}
+            </div>
+          </div>
+
+          <!-- Impact Metrics Tag Row -->
+          <div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium py-2 border-t border-slate-100 mb-4">
+              <div class="flex items-center gap-1 text-slate-700">
+                <i data-lucide="wallet" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Cost: <strong class="text-slate-900">${costStr}</strong></span>
+              </div>
+              <div class="flex items-center gap-1 text-slate-700">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Time: <strong class="text-slate-900">${timeStr}</strong></span>
+              </div>
+              <div class="flex items-center gap-1 ${opt.defectChange <= 0 ? 'text-emerald-700 font-semibold' : 'text-rose-600 font-semibold'}">
+                <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+                <span>Defects: ${defectStr}</span>
+              </div>
+              <div class="flex items-center gap-1 ${opt.reputationChange >= 0 ? 'text-blue-700' : 'text-rose-600'}">
+                <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                <span>Reputation: ${repStr}</span>
+              </div>
+            </div>
+
+            <button class="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm group-hover:bg-brand-700">
+              Select This Strategy <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+
+        card.addEventListener('click', () => applyDecision(opt));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            applyDecision(opt);
+          }
+        });
+
+        wrapper.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+  </script>
+
+  <script>
+    function applyDecision(opt) {
+      const prevBudget = state.budget;
+      const prevDefect = state.defectRate;
+      const prevRep = state.reputation;
+      const prevSchedule = state.schedule;
+      const prevUnitCost = state.unitCost;
+
+      // Update state
+      state.budget += opt.cost;
+      state.schedule += opt.time;
+      state.defectRate = Math.max(0.4, Number((state.defectRate + opt.defectChange).toFixed(1)));
+      state.reputation = Math.min(100, Math.max(20, state.reputation + opt.reputationChange));
+      state.unitCost = Number((state.unitCost + opt.unitCostImpact).toFixed(2));
+
+      if (opt.revenueMultiplier) {
+        state.revenueMultiplier = opt.revenueMultiplier;
+      }
+
+      // Track CoQ allocation
+      const absCost = Math.abs(opt.cost);
+      if (opt.coqCategory === 'prevention') {
+        state.coq.prevention += absCost;
+      } else if (opt.coqCategory === 'appraisal') {
+        state.coq.appraisal += absCost;
+      } else if (opt.coqCategory === 'internalFailure') {
+        state.coq.internalFailure += absCost + (opt.defectChange > 0 ? 8000 : 2000);
+      } else if (opt.coqCategory === 'externalFailure') {
+        state.coq.externalFailure += absCost + 12000;
+      }
+
+      // Record History
+      state.defectHistory.push(state.defectRate);
+      state.decisions.push({
+        stage: state.currentStage,
+        optionId: opt.id,
+        tag: opt.tag,
+        cost: opt.cost,
+        time: opt.time,
+        defectChange: opt.defectChange
+      });
+
+      // Flashes & delta display
+      triggerCardFlash('card-budget', opt.cost >= -10000);
+      triggerCardFlash('card-schedule', state.schedule <= 60);
+      triggerCardFlash('card-defect', opt.defectChange <= 0);
+      triggerCardFlash('card-reputation', opt.reputationChange >= 0);
+      triggerCardFlash('card-unitcost', opt.unitCostImpact <= 0.03);
+
+      updateMetricBadges(prevBudget, prevSchedule, prevDefect, prevRep, prevUnitCost);
+
+      // Advance stage
+      state.currentStage += 1;
+      
+      updateCharts();
+      renderStageUI();
+    }
+
+    function updateMetricBadges(prevBudget, prevSchedule, prevDefect, prevRep, prevUnitCost) {
+      // 1. Budget
+      const elBudget = document.getElementById('metric-budget');
+      elBudget.textContent = '$' + state.budget.toLocaleString();
+      if (state.budget < 0) {
+        elBudget.classList.add('text-rose-600');
+      } else {
+        elBudget.classList.remove('text-rose-600');
+      }
+
+      // 2. Schedule
+      const elSchedule = document.getElementById('metric-schedule');
+      elSchedule.innerHTML = `${state.schedule} <span class="text-xs font-normal text-slate-500">/ 60 d</span>`;
+      const elSchedStatus = document.getElementById('schedule-status');
+      if (state.schedule > 60) {
+        elSchedStatus.innerHTML = `<span class="text-rose-600 font-semibold">+${state.schedule - 60}d Delayed</span>`;
+      } else {
+        elSchedStatus.innerHTML = `<span class="text-emerald-600 font-semibold">${60 - state.schedule}d Under</span>`;
+      }
+
+      // 3. Defect
+      document.getElementById('metric-defect').textContent = state.defectRate.toFixed(1) + '%';
+
+      // 4. Unit Cost
+      document.getElementById('metric-unitcost').textContent = '$' + state.unitCost.toFixed(2);
+
+      // 5. Reputation
+      document.getElementById('metric-reputation').innerHTML = `${state.reputation} <span class="text-xs font-normal text-slate-500">/ 100</span>`;
+
+      // 6. Net Profit continuous update
+      const financials = calculateFinancials();
+      const elProfit = document.getElementById('metric-profit');
+      elProfit.textContent = (financials.netProfit >= 0 ? '$' : '-$') + Math.abs(financials.netProfit).toLocaleString();
+      if (financials.netProfit < 0) {
+        elProfit.className = 'text-lg sm:text-xl font-bold text-rose-600 tracking-tight';
+      } else {
+        elProfit.className = 'text-lg sm:text-xl font-bold text-emerald-600 tracking-tight';
+      }
+    }
+  </script>
+
+  <script>
+    function renderDebrief() {
+      // Hide decision container, show debrief
+      document.getElementById('decision-container').classList.add('hidden');
+      const debriefEl = document.getElementById('debrief-container');
+      debriefEl.classList.remove('hidden');
+
+      const financials = calculateFinancials();
+      
+      // Compute Final Academic Performance Grade
+      let grade = 'C';
+      let gradeBadgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+      let summaryHeadline = 'Adequate Balance with Operational Trade-offs';
+
+      const profitPass = financials.netProfit > 25000;
+      const defectPass = state.defectRate <= 2.5;
+      const schedulePass = state.schedule <= 60;
+      const reputationPass = state.reputation >= 75;
+
+      let scorePoints = 0;
+      if (financials.netProfit > 35000) scorePoints += 3;
+      else if (financials.netProfit > 15000) scorePoints += 2;
+      else if (financials.netProfit > 0) scorePoints += 1;
+
+      if (state.defectRate <= 2.0) scorePoints += 3;
+      else if (state.defectRate <= 3.5) scorePoints += 2;
+      else if (state.defectRate <= 6.0) scorePoints += 1;
+
+      if (state.schedule <= 55) scorePoints += 2;
+      else if (state.schedule <= 65) scorePoints += 1;
+
+      if (state.reputation >= 85) scorePoints += 2;
+      else if (state.reputation >= 70) scorePoints += 1;
+
+      if (scorePoints >= 9) {
+        grade = 'A';
+        gradeBadgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        summaryHeadline = 'World-Class Quality Engineering: Optimized CoQ and Proactive QA';
+      } else if (scorePoints >= 7) {
+        grade = 'B';
+        gradeBadgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
+        summaryHeadline = 'Solid Process Control with Mild Inspection Overhead';
+      } else if (scorePoints >= 4) {
+        grade = 'C';
+        gradeBadgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+        summaryHeadline = 'Vulnerable to Quality Leakage and Unplanned Scrap Costs';
+      } else if (scorePoints >= 2) {
+        grade = 'D';
+        gradeBadgeColor = 'bg-orange-100 text-orange-800 border-orange-300';
+        summaryHeadline = 'Significant Defect Spillover & Eroded Profitability';
+      } else {
+        grade = 'F';
+        gradeBadgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+        summaryHeadline = 'Catastrophic External Failures and Quality Collapse';
+      }
+
+      // Check whether user over-invested in QA
+      const totalPrevention = state.coq.prevention;
+      const highQaOverspend = totalPrevention > 80000 && state.unitCost > 0.45;
+
+      debriefEl.innerHTML = `
+        <div class="border-b border-slate-200 pb-5 mb-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span class="text-xs uppercase font-bold tracking-wider text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200">
+                End-of-Run Academic Audit
+              </span>
+              <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
+                Executive Quality Audit Debrief
+              </h3>
+              <p class="text-slate-600 text-sm mt-1">${summaryHeadline}</p>
+            </div>
+            
+            <div class="text-center p-3 rounded-2xl border-2 ${gradeBadgeColor} min-w-[100px]">
+              <div class="text-xs font-bold uppercase tracking-wider">Final Grade</div>
+              <div class="text-4xl font-black">${grade}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Key Outcome Scorecards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="text-xs text-slate-500 font-semibold">Net Profit</div>
+            <div class="text-lg font-bold ${financials.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
+              $${financials.netProfit.toLocaleString()}
+            </div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="text-xs text-slate-500 font-semibold">Final Defect Rate</div>
+            <div class="text-lg font-bold ${state.defectRate <= 2.5 ? 'text-emerald-700' : 'text-rose-600'}">
+              ${state.defectRate.toFixed(1)}%
+            </div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="text-xs text-slate-500 font-semibold">Manufacturing Cost / Unit</div>
+            <div class="text-lg font-bold ${state.unitCost <= 0.42 ? 'text-slate-900' : 'text-amber-700'}">
+              $${state.unitCost.toFixed(2)}
+            </div>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="text-xs text-slate-500 font-semibold">Brand Reputation</div>
+            <div class="text-lg font-bold ${state.reputation >= 75 ? 'text-blue-700' : 'text-rose-600'}">
+              ${state.reputation} / 100
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary Table -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200 mb-6">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-3">Financial Category</th>
+                <th class="p-3">Simulation Factor</th>
+                <th class="p-3 text-right">Accounting Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Realized Gross Revenue</td>
+                <td class="p-3 text-slate-500">200,000 units &times; $${(BASE_REVENUE_PER_BOTTLE * state.revenueMultiplier).toFixed(2)} retail yield</td>
+                <td class="p-3 text-right font-mono text-emerald-700 font-semibold">+$${Math.round(financials.grossRevenue).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Direct Process Investments</td>
+                <td class="p-3 text-slate-500">Upfront tool, inspection & SPC stage budgets</td>
+                <td class="p-3 text-right font-mono text-slate-700">-$${Math.round(financials.directSpentBudget).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Base Production Run Cost</td>
+                <td class="p-3 text-slate-500">200k bottles &times; $${state.unitCost.toFixed(2)} / unit</td>
+                <td class="p-3 text-right font-mono text-slate-700">-$${Math.round(financials.baseMfgCost).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">Internal Failure / Scrap Penalties</td>
+                <td class="p-3 text-slate-500">Defective parts culled prior to shipment</td>
+                <td class="p-3 text-right font-mono text-amber-700">-$${Math.round(financials.internalScrapCost).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-900">External Failure Penalties</td>
+                <td class="p-3 text-slate-500">Customer returns, leaking bottle claims, RMA litigation</td>
+                <td class="p-3 text-right font-mono text-rose-700">-$${Math.round(financials.externalFailureCost).toLocaleString()}</td>
+              </tr>
+              <tr class="bg-brand-50/50 font-bold text-slate-900">
+                <td class="p-3">Final Cumulative Net Profit</td>
+                <td class="p-3 text-slate-500">Total Net Retained Earnings</td>
+                <td class="p-3 text-right font-mono ${financials.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'} text-base">
+                  $${financials.netProfit.toLocaleString()}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Educational Analysis Commentary -->
+        <div class="space-y-4 text-sm text-slate-700 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+          <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+            <i data-lucide="graduation-cap" class="w-5 h-5 text-brand-600"></i>
+            Machining Lab Course Insights & Engineering Takeaways
+          </h4>
+
+          <div>
+            <strong>1. Proactive QA vs Reactive QC Dynamics:</strong>
+            <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
+              ${state.coq.prevention > state.coq.appraisal 
+                ? "You prioritized upstream prevention (QA). By controlling tool design tolerances and incoming polymer rheology, your process avoided rampant end-of-line sorting costs." 
+                : "Your strategy relied heavily on downstream inspection (QC) or took early shortcuts. As taught in the Machining Lab, quality cannot be inspected into a poorly machined part; gating defective parts at the end of the line caused substantial scrap overhead."}
+            </p>
+          </div>
+
+          <div>
+            <strong>2. Unit Economics & QA Overspending Balance:</strong>
+            <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
+              ${highQaOverspend 
+                ? "Warning: While your defect rate was near zero, spending excessively on top-tier QA increased the unit manufacturing cost to $" + state.unitCost.toFixed(2) + " per bottle. In high-volume commodity molding, over-engineering without cycle optimization narrows commercial margins." 
+                : "Your unit manufacturing cost stayed at an efficient $" + state.unitCost.toFixed(2) + " per bottle, maintaining viable profit margins while meeting commercial delivery dates."}
+            </p>
+          </div>
+
+          <div>
+            <strong>3. Tooling Precision & The 1-10-100 CoQ Pyramid:</strong>
+            <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
+              ${state.defectRate <= 2.5 
+                ? "By maintaining tool steel integrity and tight dimensional tolerances, you avoided the devastating 100x multiplier of external recalls and preserved brand reputation (" + state.reputation + "/100)." 
+                : "Defects escaped to the commercial market! Uncaught leakages created $" + Math.round(financials.externalFailureCost).toLocaleString() + " in external failure penalties, reinforcing why Machining Lab students must get mold tolerances right at Stage 1."}
+            </p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 flex flex-wrap items-center justify-end gap-4">
+          <button id="btn-restart-from-debrief" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Run Another Production Cycle
+          </button>
+        </div>
+      `; 
+
+      // Event listeners for debrief actions
+      document.getElementById('btn-restart-from-debrief').addEventListener('click', resetSimulation);
+
+      lucide.createIcons();
+    }
+  </script>
+
+  <script>
+    function resetSimulation() {
+      state = JSON.parse(JSON.stringify(INITIAL_STATE));
+      
+      // Reset UI views
+      document.getElementById('debrief-container').classList.add('hidden');
+      document.getElementById('decision-container').classList.remove('hidden');
+
+      // Reset badges
+      document.getElementById('metric-budget').textContent = '$100,000';
+      document.getElementById('metric-budget').classList.remove('text-rose-600');
+      document.getElementById('metric-schedule').innerHTML = '0 <span class="text-xs font-normal text-slate-500">/ 60 d</span>';
+      document.getElementById('schedule-status').textContent = 'Target: 60 Days';
+      document.getElementById('metric-defect').textContent = '10.0%';
+      document.getElementById('metric-unitcost').textContent = '$0.35';
+      document.getElementById('metric-reputation').innerHTML = '80 <span class="text-xs font-normal text-slate-500">/ 100</span>';
+      document.getElementById('metric-profit').textContent = '$0';
+      document.getElementById('metric-profit').className = 'text-lg sm:text-xl font-bold text-emerald-700 tracking-tight';
+
+      updateCharts();
+      renderStageUI();
+    }
+
+    // Modal Events
+    const guideModal = document.getElementById('guide-modal');
+    document.getElementById('btn-show-guide').addEventListener('click', () => {
+      guideModal.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-guide').addEventListener('click', () => {
+      guideModal.classList.add('hidden');
+    });
+    document.getElementById('btn-close-guide-2').addEventListener('click', () => {
+      guideModal.classList.add('hidden');
+    });
+    guideModal.addEventListener('click', (e) => {
+      if (e.target === guideModal) {
+        guideModal.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', resetSimulation);
+
+    // Initial Window Load
+    window.addEventListener('load', () => {
+      initCharts();
+      renderStageUI();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
